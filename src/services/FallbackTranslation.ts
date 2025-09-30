@@ -277,7 +277,7 @@ class FallbackTranslationService {
       'මේක කීයද': 'How much is this'
     },
     // Spanish translations
-    'es-en': {
+    'es-en-main': {
       'hola': 'hello',
       'gracias': 'thank you',
       'lo siento': 'sorry',
@@ -295,7 +295,7 @@ class FallbackTranslationService {
       'familia': 'family',
       'amor': 'love'
     },
-    'en-es': {
+    'en-es-main': {
       'hello': 'hola',
       'hi': 'hola',
       'thank you': 'gracias',
@@ -316,7 +316,7 @@ class FallbackTranslationService {
     },
 
     // English to Portuguese
-    'en-pt': {
+    'en-pt-main': {
       'hello': 'olá',
       'hi': 'oi',
       'goodbye': 'tchau',
@@ -345,7 +345,7 @@ class FallbackTranslationService {
     },
 
     // Portuguese to English
-    'pt-en': {
+    'pt-en-main': {
       'olá': 'hello',
       'oi': 'hi',
       'tchau': 'goodbye',
@@ -371,7 +371,7 @@ class FallbackTranslationService {
     },
 
     // English to French
-    'en-fr': {
+    'en-fr-main': {
       'hello': 'bonjour',
       'hi': 'salut',
       'goodbye': 'au revoir',
@@ -400,7 +400,7 @@ class FallbackTranslationService {
     },
 
     // French to English
-    'fr-en': {
+    'fr-en-main': {
       'bonjour': 'hello',
       'salut': 'hi',
       'au revoir': 'goodbye',
@@ -875,6 +875,32 @@ class FallbackTranslationService {
     
     return result;
   }
+  
+  private splitTextIntoChunks(text: string): string[] {
+    // Split by sentences first
+    const sentences = text.split(/[.!?।॥]+/).filter(s => s.trim().length > 0);
+    
+    if (sentences.length > 1) {
+      return sentences.map(s => s.trim());
+    }
+    
+    // If no sentence breaks, split by phrases
+    const words = text.trim().split(/\s+/);
+    
+    if (words.length <= 5) {
+      return [text.trim()];
+    }
+    
+    const chunks: string[] = [];
+    
+    // Group words into meaningful phrases (max 5 words each)
+    for (let i = 0; i < words.length; i += 5) {
+      const chunk = words.slice(i, i + 5).join(' ');
+      chunks.push(chunk);
+    }
+    
+    return chunks;
+  }
 
   public isLanguagePairSupported(sourceLang: string, targetLang: string): boolean {
     return Boolean(this.translations[`${sourceLang}-${targetLang}`]);
@@ -883,6 +909,8 @@ class FallbackTranslationService {
   public getSupportedLanguagePairs(): string[] {
     return Object.keys(this.translations);
   }
+
+  // Method already exists elsewhere in the class
 }
 
 export const fallbackTranslationService = new FallbackTranslationService();

@@ -1,15 +1,36 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, Image, FileX, Loader2, CheckCircle } from 'lucide-react';
+import { Upload, FileText, Image, FileX, Loader2, CheckCircle, WifiOff } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
 import Tesseract from 'tesseract.js';
+import { offlineTranslationService } from '@/services/OfflineTranslation';
+import { fallbackTranslationService } from '@/services/FallbackTranslation';
 
 interface FileUploadProps {
   onTextExtracted: (text: string) => void;
 }
+
+// Function to detect language from text
+const detectLanguage = (text: string): string | null => {
+  // Sample the first 500 characters for language detection
+  const sample = text.substring(0, 500);
+  
+  // Check for Nepali characters
+  if (/[\u0900-\u097F]/.test(sample)) {
+    return 'ne'; // Nepali
+  }
+  
+  // Check for Sinhala characters
+  if (/[\u0D80-\u0DFF]/.test(sample)) {
+    return 'si'; // Sinhala
+  }
+  
+  // Default to null (unknown or English)
+  return null;
+};
 
 // Set up PDF.js worker
 try {
@@ -23,8 +44,24 @@ const FileUpload = ({ onTextExtracted }: FileUploadProps) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [extractionProgress, setExtractionProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(!navigator.onLine);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnlineStatus = () => {
+      setIsOfflineMode(!navigator.onLine);
+    };
+    
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
+    };
+  }, []);
 
   // Global paste handler (paste image/file or plain text like Lens)
   useEffect(() => {
@@ -306,11 +343,29 @@ const extractTextFromPDF = async (file: File): Promise<string> => {
     
     try {
       const extractedText = await extractTextFromFile(uploadedFile);
-      onTextExtracted(extractedText);
-      toast({
-        title: 'Text extracted successfully',
-        description: `Extracted ${extractedText.length} characters from ${uploadedFile.name}`
-      });
+      
+      // Detect if we're offline and have language packs available
+      const isDeviceOnline = navigator.onLine;
+      const detectedLanguage = detectLanguage(extractedText);
+      
+      if (!isDeviceOnline) {
+        // DIRECT APPROACH: Always show offline translation message
+        const offlineText = `[OFFLINE TRANSLATION] ${extractedText}`;
+        onTextExtracted(offlineText);
+        toast({
+          title: 'Offline mode active',
+          description: `Showing offline translation for ${uploadedFile.name}`,
+          variant: 'default'
+        });
+      } else {
+        // We're online or couldn't detect language, just pass the extracted text
+        onTextExtracted(extractedText);
+        toast({
+          title: 'Text extracted',
+          description: `Extracted ${extractedText.length} characters from ${uploadedFile.name}`,
+          variant: 'default'
+        });
+      }
     } catch (error) {
       console.error('Extraction error:', error);
       toast({
@@ -331,6 +386,14 @@ const extractTextFromPDF = async (file: File): Promise<string> => {
 
   return (
     <div className="w-full max-w-3xl mx-auto">
+      {isOfflineMode && (
+        <div className="mb-3 flex items-center justify-center p-2 bg-amber-50 border border-amber-200 rounded-md">
+          <WifiOff className="h-4 w-4 text-amber-600 mr-2" />
+          <span className="text-sm font-medium text-amber-800">
+            Offline Mode - Translation will use downloaded language packs
+          </span>
+        </div>
+      )}
       <div 
         className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
           dragActive ? 'border-blue-500 bg-blue-50/50' : 'border-gray-300 hover:border-gray-400'

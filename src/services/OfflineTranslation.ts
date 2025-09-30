@@ -522,7 +522,7 @@ class OfflineTranslationService {
   
   // Nepali to English translation with comprehensive handling
   private translateNepaliToEnglish(text: string): string {
-    const neToEnDict: {[key: string]: string} = {
+    const neToEnDict: Record<string, string> = {
       'नमस्ते': 'Hello',
       'धन्यवाद': 'Thank you',
       'माफ गर्नुहोस्': 'Sorry',
@@ -674,7 +674,7 @@ class OfflineTranslationService {
   }
   
   // Helper method to translate Nepali words to English with improved context handling
-  private translateNepaliWordsToEnglish(text: string, dictionary: {[key: string]: string}): string {
+  private translateNepaliWordsToEnglish(text: string, dictionary: Record<string, string>): string {
     // First check for multi-word phrases that might be in the text
     const phrases = Object.keys(dictionary)
       .filter(key => key.includes(' ') && text.includes(key))
@@ -735,7 +735,7 @@ class OfflineTranslationService {
   
   // Sinhala to English translation
   private translateSinhalaToEnglish(text: string): string {
-    const siToEnDict: {[key: string]: string} = {
+    const siToEnDict: Record<string, string> = {
       'ආයුබෝවන්': 'Hello',
       'ස්තූතියි': 'Thank you',
       'සමාවන්න': 'Sorry',
@@ -856,7 +856,7 @@ class OfflineTranslationService {
   }
   
   // Helper method to translate Sinhala words to English
-  private translateSinhalaWordsToEnglish(text: string, dictionary: {[key: string]: string}): string {
+  private translateSinhalaWordsToEnglish(text: string, dictionary: Record<string, string>): string {
     const words = text.split(/\s+/);
     const translated = words.map(word => {
       // Try to find the word in the dictionary
@@ -883,7 +883,7 @@ class OfflineTranslationService {
   
   // English to Nepali translation
   private translateEnglishToNepali(text: string): string {
-    const enToNeDict: {[key: string]: string} = {
+    const enToNeDict: Record<string, string> = {
       'hello': 'नमस्ते',
       'hi': 'नमस्ते',
       'goodbye': 'बिदाई',
@@ -941,7 +941,7 @@ class OfflineTranslationService {
   
   // English to Sinhala translation
   private translateEnglishToSinhala(text: string): string {
-    const enToSiDict: {[key: string]: string} = {
+    const enToSiDict: Record<string, string> = {
       'hello': 'ආයුබෝවන්',
       'hi': 'ආයුබෝවන්',
       'goodbye': 'ගිහින් එන්නම්',
